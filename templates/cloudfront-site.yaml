@@ -12,21 +12,6 @@ Parameters:
   SubDomain:
     Description: Subdomain
     Type: String
-  S3BucketLogs:
-    Description: Logging Bucket
-    Type: String
-  S3BucketRoot:
-    Description: Content Bucket
-    Type: String
-  S3BucketLogsName:
-    Description: Logging Bucket
-    Type: String
-  S3BucketRootName:
-    Description: Content Bucket
-    Type: String
-  S3BucketRootArn:
-    Description: Content Bucket locator
-    Type: String
   CreateApex: 
     Type: String
 
@@ -36,17 +21,45 @@ Conditions:
     - 'yes'
 
 Resources:
+  S3BucketLogs:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Solution
+          Value: ACFS3
+
+  S3BucketRoot:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref S3BucketLogs
+        LogFilePrefix: 'origin/'
+      Tags:
+        - Key: Solution
+          Value: ACFS3
+
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref 'S3BucketRoot'
+      Bucket: !Ref S3BucketRoot
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Action:
               - s3:GetObject
             Effect: Allow
-            Resource: !Sub '${S3BucketRootArn}/*'
+            Resource: !Sub '${S3BucketRoot.Arn}/*'
             Principal:
               CanonicalUser: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
 
@@ -80,11 +93,11 @@ Resources:
         DefaultRootObject: 'index.html'
         IPV6Enabled: true
         Logging:
-          Bucket: !Ref 'S3BucketLogsName'
+          Bucket: !GetAtt S3BucketLogs.DomainName
           IncludeCookies: false
           Prefix: 'cdn/'
         Origins:
-          - DomainName: !Ref 'S3BucketRootName'
+          - DomainName: !GetAtt S3BucketRoot.DomainName
             Id: !Sub 'S3-${AWS::StackName}-root'
             S3OriginConfig:
               OriginAccessIdentity:
@@ -166,3 +179,11 @@ Outputs:
   CloudFrontDomainName:
     Description: Website address
     Value: !Sub '${SubDomain}.${DomainName}'
+
+  S3BucketRoot:
+    Description: Website bucket
+    Value: !Ref S3BucketRoot
+
+  S3BucketLogs:
+    Description: Logging bucket
+    Value: !Ref S3BucketLogs

@@ -13,7 +13,7 @@ Metadata:
 Mappings:
   Solution:
     Constants:
-      Version: 'v0.8'
+      Version: 'v0.9'
 
 Rules:
   OnlyUsEast1:
@@ -45,15 +45,6 @@ Parameters:
     AllowedValues: ['yes','no']
 
 Resources:
-  CustomResourceStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      # TemplateURL: ./custom-resource.yaml
-      TemplateURL: https://cf-templates-1e9pm9erjhefy-us-east-1.s3.amazonaws.com/custom-resource.yaml
-      Tags:
-        - Key: Solution
-          Value: ACFS3
-
   AcmCertificateStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -78,11 +69,6 @@ Resources:
         DomainName: !Ref DomainName
         SubDomain: !Ref SubDomain
         CreateApex: !Ref CreateApex
-        S3BucketRoot: !GetAtt CustomResourceStack.Outputs.S3BucketRoot
-        S3BucketRootName: !GetAtt CustomResourceStack.Outputs.S3BucketRootName
-        S3BucketRootArn: !GetAtt CustomResourceStack.Outputs.S3BucketRootArn
-        S3BucketLogs: !GetAtt CustomResourceStack.Outputs.S3BucketLogs
-        S3BucketLogsName: !GetAtt CustomResourceStack.Outputs.S3BucketLogsName
       Tags:
         - Key: Solution
           Value: ACFS3
@@ -90,18 +76,6 @@ Resources:
 Outputs:
   SolutionVersion:
     Value: !FindInMap [Solution, Constants, Version]
-  S3BucketLogs:
-    Description: Logging bucket
-    Value: !GetAtt CustomResourceStack.Outputs.S3BucketLogs
-  S3BucketRoot:
-    Description: Website bucket
-    Value: !GetAtt CustomResourceStack.Outputs.S3BucketRoot
-  S3BucketLogsName:
-    Description: Logging bucket name
-    Value: !GetAtt CustomResourceStack.Outputs.S3BucketLogsName
-  S3BucketRootName:
-    Description: Website bucket name
-    Value: !GetAtt CustomResourceStack.Outputs.S3BucketRootName
   CertificateArn:
     Description: Issued certificate
     Value: !GetAtt AcmCertificateStack.Outputs.CertificateArn
@@ -111,3 +85,9 @@ Outputs:
   CloudFrontDomainName:
     Description: Website address
     Value: !GetAtt CloudFrontStack.Outputs.CloudFrontDomainName
+  S3BucketLogs:
+    Description: Logging bucket
+    Value: !GetAtt CloudFrontStack.Outputs.S3BucketLogs
+  S3BucketRoot:
+    Description: Website bucket
+    Value: !GetAtt CloudFrontStack.Outputs.S3BucketRoot
