@@ -23,3 +23,9 @@ aws cloudformation update-stack \
                ParameterKey=SubDomain,ParameterValue=www \
                ParameterKey=HostedZoneId,ParameterValue=<my-hosted-zone-id> \
                ParameterKey=CreateApex,ParameterValue=no
+
+
+
+aws cloudformation create-stack \
+  --stack-name MyAPI \
+  --template-body file://templates/lambda-api.yaml
