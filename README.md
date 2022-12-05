@@ -11,21 +11,6 @@ Manually created CloudFormation stack in AWS UI.
 
 ## Create/update stack from command line
 
-aws cloudformation list-stack \
-  --stack-status-filter CREATE_COMPLETE
-
-aws cloudformation create-stack \
- ~ or ~
-aws cloudformation update-stack \
-  --stack-name MyWebsite \
-  --template-body file://templates/main.yaml \
-  --parameters ParameterKey=DomainName,ParameterValue=sergeypetrunin.com \
-               ParameterKey=SubDomain,ParameterValue=www \
-               ParameterKey=HostedZoneId,ParameterValue=<my-hosted-zone-id> \
-               ParameterKey=CreateApex,ParameterValue=no
-
-
-
 aws cloudformation create-stack \
   --stack-name MyAPI \
   --template-body file://templates/lambda-api.yaml

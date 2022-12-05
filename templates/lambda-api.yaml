@@ -56,7 +56,7 @@ Resources:
         ZipFile: |
           def handler(event,context):
             return {
-              'body': 'Hello there {0}'.format(event['requestContext']['identity']['sourceIp']),
+              'body': 'Hello from my API, deploy using deploy.sh',
               'headers': {
                 'Content-Type': 'text/plain'
               },
