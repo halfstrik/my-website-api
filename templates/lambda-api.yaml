@@ -8,10 +8,10 @@ Parameters:
   apiGatewayStageName:
     Type: String
     AllowedPattern: '[a-z0-9]+'
-    Default: call
+    Default: dev
   apiGatewayHTTPMethod:
     Type: String
-    Default: POST
+    Default: GET
   lambdaFunctionName:
     Type: String
     AllowedPattern: '[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+'
