@@ -4,7 +4,11 @@ Description: My API Gateway and Lambda function
 Parameters:
   apiGatewayName:
     Type: String
-    Default: my-api
+    Default: my-website-api-gateway
+  lambdaFunctionName:
+    Type: String
+    AllowedPattern: '[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+'
+    Default: my-website-api-function
   apiGatewayStageName:
     Type: String
     AllowedPattern: '[a-z0-9]+'
@@ -12,10 +16,6 @@ Parameters:
   apiGatewayHTTPMethod:
     Type: String
     Default: GET
-  lambdaFunctionName:
-    Type: String
-    AllowedPattern: '[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+'
-    Default: my-function
 
 Resources:
   apiGateway:
@@ -68,6 +68,8 @@ Resources:
       MemorySize: 128
       Role: !GetAtt lambdaIAMRole.Arn
       Runtime: python3.8
+    DependsOn:
+      - lambdaIAMRole
 
   lambdaApiGatewayInvoke:
     Type: AWS::Lambda::Permission
@@ -82,6 +84,9 @@ Resources:
   lambdaIAMRole:
     Type: AWS::IAM::Role
     Properties:
+      # RoleName stuck between stack recreations
+      # RoleName is ignored, always created with -MQ7OC5QOHHZZ prefix
+      RoleName: MyAPI-lambdaIAMRole-MQ7OC5QOHHZZ
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -92,7 +97,8 @@ Resources:
               Service:
                 - lambda.amazonaws.com
       Policies:
-        - PolicyDocument:
+        - PolicyName: MyAPI-lambdaIAMPolicy
+          PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Action:
@@ -102,7 +108,6 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambdaFunctionName}:*
-          PolicyName: lambda
 
   lambdaLogGroup:
     Type: AWS::Logs::LogGroup
