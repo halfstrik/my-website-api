@@ -16,6 +16,19 @@ Parameters:
   apiGatewayHTTPMethod:
     Type: String
     Default: GET
+  SubDomain:
+    Description: The part of a website address before your DomainName - e.g. www or img
+    Type: String
+    Default: api
+    AllowedPattern: ^[^.]*$
+  DomainName:
+    Description: The part of a website address after your SubDomain - e.g. example.com
+    Type: String
+    Default: sergeypetrunin.com
+  HostedZoneId:
+    Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
+    Type: String
+    Default: Z03527982HOQEG6ZO37TR
 
 Resources:
   apiGateway:
@@ -115,9 +128,52 @@ Resources:
       LogGroupName: !Sub /aws/lambda/${lambdaFunctionName}
       RetentionInDays: 90
 
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: api.sergeypetrunin.com
+      DomainValidationOptions:
+        - DomainName: !Sub '${SubDomain}.${DomainName}'
+          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
+
+  ApiGWCustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Sub '${SubDomain}.${DomainName}'
+      CertificateArn: !Ref Certificate
+      EndpointConfiguration:
+        Types:
+          - EDGE
+      SecurityPolicy: TLS_1_2
+
+  Route53RecordSetGroup:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Sub '${SubDomain}.${DomainName}'
+      Type: A
+      HostedZoneId: !Ref HostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt ApiGWCustomDomain.DistributionDomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: !GetAtt ApiGWCustomDomain.DistributionHostedZoneId
+
+  APIMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      # BasePath: /
+      DomainName: !Sub '${SubDomain}.${DomainName}'
+      RestApiId: !Ref apiGateway
+      Stage: !Ref apiGatewayStageName
+    DependsOn:
+      - ApiGWCustomDomain
+
 Outputs:
   apiGatewayInvokeURL:
     Value: !Sub https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/${apiGatewayStageName}
+
+  apiDomainInvokeURL:
+    Value: !Sub https://${SubDomain}.${DomainName}
 
   lambdaArn:
     Value: !GetAtt lambdaFunction.Arn
