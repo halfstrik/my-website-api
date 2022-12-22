@@ -5,5 +5,5 @@ zip ../build/deployment.zip index.py
 cd ..
 
 aws lambda update-function-code \
-  --function-name my-function \
+  --function-name my-website-api-function \
   --zip-file fileb://build/deployment.zip

@@ -54,10 +54,32 @@ Resources:
       ResourceId: !GetAtt apiGateway.RootResourceId
       RestApiId: !Ref apiGateway
 
+  apiGatewayHealthResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref apiGateway
+      ParentId: !GetAtt apiGateway.RootResourceId
+      PathPart: health
+
+  apiGatewayHealthMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt lambdaFunction.Arn
+      ResourceId: !Ref apiGatewayHealthResource
+      RestApiId: !Ref apiGateway
+
   apiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - apiGatewayRootMethod
+      - apiGatewayHealthMethod
     Properties:
       RestApiId: !Ref apiGateway
       StageName: !Ref apiGatewayStageName
@@ -92,7 +114,17 @@ Resources:
       Principal: apigateway.amazonaws.com
       # note: if route *not* at API Gateway root, `SourceArn` would take the form of:
       #               arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/PATH_PART
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/*/${apiGatewayHTTPMethod}/
+
+  lambdaApiGatewayInvokeHealth:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt lambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+      # note: if route *not* at API Gateway root, `SourceArn` would take the form of:
+      #               arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/${apiGatewayStageName}/${apiGatewayHTTPMethod}/PATH_PART
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/*/${apiGatewayHTTPMethod}/health
 
   lambdaIAMRole:
     Type: AWS::IAM::Role
@@ -162,6 +194,16 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
       # BasePath: /
+      DomainName: !Sub '${SubDomain}.${DomainName}'
+      RestApiId: !Ref apiGateway
+      Stage: !Ref apiGatewayStageName
+    DependsOn:
+      - ApiGWCustomDomain
+
+  APIMappingHealth:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      BasePath: health
       DomainName: !Sub '${SubDomain}.${DomainName}'
       RestApiId: !Ref apiGateway
       Stage: !Ref apiGatewayStageName
