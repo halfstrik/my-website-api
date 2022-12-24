@@ -7,10 +7,8 @@ https://github.com/aws-samples/amazon-cloudfront-secure-static-site
 It appears that Lambda is no longer needed, commented out.
 
 Deploy is performed by copying templates and files to S3 buckets.
-Manually created CloudFormation stack in AWS UI.
+Execute `build_deploy.sh` after CloudFormation stack is created.
 
 ## Create/update stack from command line
 
-aws cloudformation create-stack \
-  --stack-name MyAPI \
-  --template-body file://templates/lambda-api.yaml
+See `aws-create-stack.sh` and `aws-update-stack.sh`
