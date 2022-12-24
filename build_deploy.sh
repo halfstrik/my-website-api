@@ -11,7 +11,7 @@ deactivate
 cd venv/lib/python3.9/site-packages
 zip -r ../../../../build/deployment.zip .
 cd ../../../../
-zip -g build/deployment.zip -r lambda
+zip -g build/deployment.zip -r mywebsite
 
 aws lambda update-function-code \
   --function-name my-website-api-function \

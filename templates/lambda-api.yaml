@@ -99,7 +99,7 @@ Resources:
             }
       Description: Example Lambda function
       FunctionName: !Ref lambdaFunctionName
-      Handler: lambda.index.handler
+      Handler: mywebsite.index.handler
       MemorySize: 128
       Role: !GetAtt lambdaIAMRole.Arn
       Runtime: python3.9
